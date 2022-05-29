@@ -6,16 +6,23 @@ import { useState } from "react";
 import styles from "../styles/Home.module.css";
 
 const Home: NextPage = () => {
-  const [data, setData] = useState<any>();
+  const [data, setData] = useState<any>(null);
+  const [cep, setCep] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
 
-  useState(() => {
-    const fetchData = async () => {
-      const response = await axios.get("./api/search-cep?cep=01001000");
-      console.log(response);
-      setData(response);
-    };
-    fetchData();
-  }, []);
+  const searchCep = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const { data } = await axios.get("./api/search-cep?cep=01001000");
+      console.log(data);
+      setData(data);
+    } catch (error) {
+      setError(true);
+    }
+    setLoading(false);
+  };
   return (
     <div className={styles.container}>
       <Head>
@@ -35,33 +42,37 @@ const Home: NextPage = () => {
         </p>
 
         <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+          <input
+            type="text"
+            placeholder="Digite o CEP"
+            onInput={(e) => {
+              console.log(e.target.value);
+              setCep(e.target.value);
+            }}
+          />
+          <button onClick={() => searchCep()}>Buscar</button>
+        </div>
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+        <div className={styles.grid}>
+          {loading && <p>Carregando...</p>}
+          {error && <p>Erro ao buscar o CEP</p>}
+          {data && (
+            <>
+              <p>CEP: {cep}</p>
+              <ul>
+                {data.map((item: any, index: number) => (
+                  <li key={item.id}>
+                    <p>{index}</p>
+                    <ul>
+                      {item.sellers.map((seller: any) => (
+                        <li key={seller.id}>{seller.name}</li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       </main>
 
